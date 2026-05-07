@@ -18,10 +18,10 @@ const windowsHalfPtr = is64Bit ? "i32" as const : "i16" as const;
 const windowsUHalfPtr = is64Bit ? "u32" as const : "u16" as const;
 const nativeChar = isWindows ? "i8" : "u8";
 
-const testBuffer = new ArrayBuffer(4);
+const testBuffer: ArrayBuffer = new ArrayBuffer(4);
 new DataView(testBuffer).setUint32(0, 0x00_00_00_01, true);
 
-export const SystemEndianness = new Uint8Array(testBuffer)[0] === 0x01
+export const SystemEndianness: enums.Endianness = new Uint8Array(testBuffer)[0] === 0x01
     ? enums.Endianness.Little
     : enums.Endianness.Big;
 
