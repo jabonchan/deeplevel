@@ -7,7 +7,7 @@
     <hr /><br />
 </div>
 
-A 0 dependencies 🥳 low-level, **ABI-accurate** struct/union/array layout and
+A zero dependencies 🥳 low-level, **ABI-accurate** struct/union/array layout and
 serialization library for TypeScript, Deno 🦖.
 
 <hr />
