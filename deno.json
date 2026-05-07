@@ -1,0 +1,19 @@
+{
+    "name": "@jabonchan/deeplevel",
+    "version": "0.0.1",
+    "license": "MIT",
+    "exports": "./mod.ts",
+    "imports": {},
+    "test": {
+        "include": [
+            "./tests/packed.ts",
+            "./tests/layout.ts",
+            "./tests/values.ts"
+        ]
+    },
+    "fmt": {
+        "exclude": [],
+        "indentWidth": 4,
+        "useTabs": false
+    }
+}

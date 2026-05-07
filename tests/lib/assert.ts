@@ -1,0 +1,4 @@
+export function assert(condition: unknown, message: string) {
+    if (!condition) throw new Error(`❌ ${message}`);
+    console.log(`✅ ${message}`);
+}
