@@ -1,7 +1,7 @@
 <div align="center">
     <img src="./assets/logo.png" alt="Logo" width="250">
     <h3><i>Complex data types made easy 🗃️</i></h3><br />
-    <img src="https://github.com/jabonchan/deeplevel/actions/workflows/deno.yml/badge.svg?branch=main"></img>
+    <img src="https://github.com/jabonchan/deeplevel/actions/workflows/deno.yml/badge.svg?branch=master"></img>
     <img src="https://img.shields.io/badge/Tested%20on%20Deno-2.7.14-blue"></img>
     <img src="https://img.shields.io/badge/Dependencies-0-yellow"></img>
     <hr /><br />
