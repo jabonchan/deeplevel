@@ -61,11 +61,12 @@ standard-layout types.
 - 📏 **Packed structs**
   - Disable padding (`#pragma pack(1)` equivalent)
 
-- 🧬 **Nested structures and unions**
+- 🧬 **Nested arrays, structures and unions**
   - Structs inside structs
   - Unions inside structs
   - Arrays inside structs
   - Arbitrary deep nesting
+  - And so on...
 
 - 📚 **Arrays**
   - Fixed-length arrays with correct memory layout.
