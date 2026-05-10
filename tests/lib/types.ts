@@ -1,2 +1,4 @@
-export type RegularObject = Record<string | symbol | number, unknown>;
+export type RegularObject =
+    | Record<string | symbol | number, unknown>
+    | Array<unknown>;
 export type Indexable = Record<PropertyKey, unknown>;

@@ -34,6 +34,71 @@ Deno.test("values: union roundtrip (strict)", () => {
     test.objectEqualsOptionalProperties(value, out);
 });
 
+Deno.test("Values: arrays", () => {
+    const definitionA = new deeplevel.NativeArray({
+        length: 3,
+        type: t["double"], // if we use float we may lose precision and cause the check to fail
+    });
+
+    const definitionB = new deeplevel.NativeArray({
+        length: 4,
+        type: new deeplevel.Struct({
+            fields: [
+                { name: "pi", type: t["double"] }, // if we use float we may lose precision and cause the check to fail
+                {
+                    name: "vector3",
+                    type: new deeplevel.NativeArray({
+                        type: t["int"],
+                        length: 3,
+                    }),
+                },
+            ],
+        }),
+    });
+
+    const valueA = [0.5, 0.1, 5];
+    const valueB = [
+        { pi: Math.PI, vector3: [1, 2, 3] },
+        { pi: Math.PI, vector3: [3, 4, 9] },
+        { pi: Math.PI, vector3: [6, 7, 8] },
+        { pi: Math.PI, vector3: [9, 10, 11] },
+    ];
+
+    const packedA = definitionA.pack(valueA);
+    const packedB = definitionB.pack(valueB);
+
+    const unpackedA = definitionA.unpack(packedA);
+    const unpackedB = definitionB.unpack(packedB);
+
+    test.objectEquals(valueA, unpackedA);
+    test.objectEquals(valueB, unpackedB);
+});
+
+Deno.test("Values: nested arrays", () => {
+    const definition = new deeplevel.Struct({
+        fields: [
+            { name: "isVector", type: t["bool"] },
+            {
+                name: "vector",
+                type: new deeplevel.NativeArray({
+                    length: 3,
+                    type: t["double"], // if we use float we may lose precision and cause the check to fail
+                }),
+            },
+        ],
+    });
+
+    const value = {
+        isVector: true,
+        vector: [1, Math.PI, 3],
+    };
+
+    const packed = definition.pack(value);
+    const unpacked = definition.unpack(packed);
+
+    test.objectEquals(value, unpacked);
+});
+
 Deno.test("values: deep nested strict", () => {
     const Inner = new deeplevel.Struct({
         fields: [

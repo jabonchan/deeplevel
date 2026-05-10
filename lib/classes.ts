@@ -46,7 +46,7 @@ export class NativeArray<
         opts = { ...opts };
 
         opts.endianness ??= Endianness.System;
-        opts.size = Math.max(opts.size ?? 1, 1);
+        opts.size = Math.max(opts.size ?? 0, 0); // Arrays don't default to 1 byte of size when empty
 
         this.isLittleEndian = endianness(opts.endianness);
         this.isBigEndian = !this.isLittleEndian;
