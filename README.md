@@ -68,7 +68,7 @@ standard-layout types.
   - Arbitrary deep nesting
 
 - 📚 **Arrays**
-  - Fixed-length arrays with correct stride
+  - Fixed-length arrays with correct memory layout.
 
 - 🧩 **Shape-preserving type system**
   - Types directly mirror the structure of defined layouts. Structs, unions, and
@@ -107,7 +107,7 @@ import * as deeplevel from "jsr:@jabonchan/deeplevel";
 > Creating an structure is more easy than ever!
 
 ```ts
-import * as deeplevel from "./mod.ts";
+import * as deeplevel from "jsr:@jabonchan/deeplevel";
 
 const t = deeplevel.constants.DefaultPrimitiveTypes;
 
@@ -140,7 +140,7 @@ console.log(result);
 > Creating an union.
 
 ```ts
-import * as deeplevel from "./mod.ts";
+import * as deeplevel from "jsr:@jabonchan/deeplevel";
 
 const t = deeplevel.constants.DefaultPrimitiveTypes;
 
@@ -157,7 +157,7 @@ console.log(U);
 > Isn't it beautiful how complex data is printed to the console?
 
 ```cpp
-(Offset:0x00:0 Size:0x08:8) union unnamed {
+(Offset:0x00:0 Size:0x08:8) union {
     Endianness: Little // (Or "Big" depending on your system)
     Alignment: 0x08:8 Natural // (Or "Packed" if specified so)
     Padding: 0x00:0
@@ -171,25 +171,25 @@ console.log(U);
 
 **Code:**
 
-> Creating an array (fancy name for single property union).
+> Creating a native array.
 
 ```ts
-import * as deeplevel from "./mod.ts";
+import * as deeplevel from "jsr:@jabonchan/deeplevel";
 
 const t = deeplevel.constants.DefaultPrimitiveTypes;
-const A = deeplevel.helpers.createArray(t["int"], 3);
+const A = new deeplevel.NativeArray({ type: t["int"], length: 3 });
 
-const value = { "[ARRAY_ITEMS]": [1, 2, 3] };
+const value = [1, 2, 3];
 
 const buffer = A.pack(value);
 const result = A.unpack(buffer);
 
-console.log(result["[ARRAY_ITEMS]"]);
+console.log(result);
 ```
 
 **Output:**
 
-> Yep, on deeplevel arrays are unions in disguise.
+> Ah, what a nice array.
 
 ```cpp
 [ 1, 2, 3 ]
@@ -201,34 +201,29 @@ console.log(result["[ARRAY_ITEMS]"]);
 
 ---
 
-- **Reference:** `ArrayDeclaration` refers to the definition of a native array
-  (`int[4]` for example), its definition is
-  `{ length: number, type: ValueDeclarationType }`. It is also considered a
-  `ValueDeclarationType`.
-
----
-
 - **Reference:** `ValueDeclarationType` refers to the definition of a type. It's
-  an union of `Struct`, `Union`, `Deno.NativeType` (Without the
-  `Deno.NativeStructType`) and `ArrayDeclaration` (Example: `"i32"`).
+  an union of `Struct`, `Union`, `NativeArray`, `Deno.NativeType` excluding
+  `Deno.NativeStructType` (For example: `"i32"`).
 
 ---
 
-- **Reference:** `Declaration` refers to the shape of a structure or union.
-  Depending on the context it can be `{ [name: string]: ValueDeclarationType }`
-  for unions or `{ name: string, type: ValueDeclarationType }[]` for structures.
+- **Reference:** `Declaration` refers to the shape of a structure, native array
+  or union. Depending on the context it can be
+  `{ [name: string]: ValueDeclarationType }` for unions, `ValueDeclarationType`
+  for native arrays, or `{ name: string, type: ValueDeclarationType }[]` for
+  structures.
 
 ---
 
-- **Reference:** `ComplexType` refers to `Union` or `Struct`.
+- **Reference:** `ComplexType` refers to `Union`, `NativeArray` or `Struct`.
 
 ---
 
 - **Reference:** `NativeValue` refers to the JS equivalent of a FFI type. That
   means `number`, `bigint`, `Deno.PointerValue`, `boolean`, `Array<NativeValue>`
-  or an unpacked `Struct` or `Union`. If we are on the context of passing the
-  input to a `.pack()` function then we are also talking about `TypedArray`s and
-  `ArrayBuffer`, which are not used by `.unpack()`.
+  or an unpacked `Struct`, `NativeArray` or `Union`. If we are on the context of
+  passing the input to a `.pack()` function then we are also talking about
+  `TypedArray`s and `ArrayBuffer`, which are not used by `.unpack()`.
 
 ---
 
@@ -245,8 +240,8 @@ console.log(result["[ARRAY_ITEMS]"]);
 ---
 
 - **Exported:** `deeplevel.type.ExtractDeclaration<ComplexType>` - Generic type
-  that returns the `Declaration` that was used to initialize the `Union` or
-  `Struct`.
+  that returns the `Declaration` that was used to initialize the `Union`,
+  `NativeArray` or `Struct`.
 
 ---
 
@@ -260,6 +255,11 @@ console.log(result["[ARRAY_ITEMS]"]);
   returns an object whose properties are every possible interpretation of the
   data specified on `Declaration`. It basically returns an object with
   `NativeValue`s
+
+---
+
+- **Exported:** `deeplevel.type.UnpackedNativeArray<Declaration>` - Generic type
+  that returns a fixed-length array of `NativeValue`s.
 
 ---
 
@@ -768,42 +768,145 @@ function isUnion(value: unknown): value is Union;
 
 ---
 
-### **Helpers**
+### **Class `deeplevel.NativeArray`**
 
-`deeplevel.helpers.createArray()`: Creates an union with a single member named
-`"[ARRAY_ITEMS]"` that inside contains an `ArrayDeclaration`.
+#### **Definition**
 
 ```ts
-function createArray<const Declaration extends ValueDeclarationType>(
-    type: Declaration,
-    length: number,
-    opts: {
-        size?: number;
-        endianness?: deeplevel.types.Endianness;
-        align?: deeplevel.types.Alignment;
-    },
-): Union<
-    {
-        readonly "[ARRAY_ITEMS]": {
-            readonly length: number;
-            readonly type: Declaration;
-        };
-    }
->;
+NativeArray<
+    const Declaration extends ValueDeclarationType = ValueDeclarationType,
+>
 ```
 
-- `type`: `ValueDeclarationType` - The type of the items inside the array.
-- `length`: `number` - The size of the array
-- `opts`: Optional configuration.
-  - `endianness`: `deeplevel.types.Endianness` - Controls whether the union is
+#### **Methods**
+
+`::constructor()` - Creates a new instance of `NativeArray`.
+
+```ts
+function constructor(
+    opts: {
+        length: number;
+        type: Declaration;
+
+        endianness?: deeplevel.types.Endianness;
+        align?: deeplevel.types.Alignment;
+        size?: number;
+    },
+);
+```
+
+**Parameters:**
+
+- `opts`: Specifies the element type and parameters of the native array.
+  - `length`: `number` - Number of elements in the array.
+  - `type`: `ValueDeclarationType` - Type of each element in the array.
+  - `endianness`: `deeplevel.types.Endianness` - Controls whether the array is
     encoded as little or big endian. Defaults to
     `deeplevel.types.Endianness.System`.
   - `align`: `deeplevel.types.Alignment` - Controls alignment strategy. Defaults
     to `deeplevel.types.Alignment.Natural`.
-  - `size`: `number` - Minimum size of the union. If larger than the computed
-    size, padding is added. Defaults to `1`.
+  - `size`: `number` - Minimum size of the array in bytes. If larger than the
+    computed size, padding is added. Unlike `Struct` and `Union`, empty arrays
+    do not default to a size of `1`.
 
 ---
+
+`::toString()` & `::Symbol.for("Deno.customInspect")`: Returns a formatted
+string with useful information about the native array.
+
+---
+
+`::offsetof()` - Returns the offset of an item inside the array.
+
+```ts
+function offsetof(index: number): number;
+```
+
+- `index`: `number` - Zero-based index of the item.
+
+---
+
+`::typeof()` - Returns the type of the array items.
+
+```ts
+function typeof(): Declaration;
+```
+
+---
+
+`::alignof()` - Returns the alignment of the array.
+
+```ts
+function alignof(): number;
+```
+
+---
+
+`::pack()` - Encodes an `UnpackedNativeArray` into an `ArrayBuffer`.
+
+```ts
+function pack(
+    array: UnpackedNativeArray<Declaration>,
+    buff?: ArrayBuffer,
+    offset?: number,
+): ArrayBuffer;
+```
+
+- `array`: `UnpackedNativeArray` - Array containing the values to write.
+- `buff`: `ArrayBuffer` - Destination buffer. A new buffer is created if not
+  provided.
+- `offset`: `number` - Byte offset to start writing from. Defaults to `0`.
+
+---
+
+`::unpack()` - Decodes an `ArrayBuffer` into an `UnpackedNativeArray`.
+
+```ts
+function unpack(
+    buff: ArrayBuffer,
+    offset?: number,
+): UnpackedNativeArray<Declaration>;
+```
+
+- `buff`: `ArrayBuffer` - Source buffer to read from.
+- `offset`: `number` - Byte offset to start reading from. Defaults to `0`.
+
+---
+
+#### **Properties**
+
+- `readonly isLittleEndian`: `boolean` - Whether the array uses little-endian
+  encoding.
+- `readonly isBigEndian`: `boolean` - Whether the array uses big-endian
+  encoding.
+- `readonly endianness`: `deeplevel.types.Endianness` - Active endianness.
+
+- `readonly align`: `deeplevel.types.Alignment` - Alignment mode used for the
+  array.
+- `readonly type`: `ValueDeclarationType` - Type of the array items.
+
+- `readonly byteLength`: `number` - Total size in bytes (including padding).
+- `readonly alignment`: `number` - Alignment of the array items.
+- `readonly padding`: `number` - Padding added after the last item.
+- `readonly length`: `number` - Number of elements in the array.
+- `readonly size`: `number` - Size of the array before trailing padding is
+  applied.
+
+---
+
+#### **Static**
+
+`isNativeArray()` - Checks whether a value is a `NativeArray` instance.
+
+```ts
+function isNativeArray(value: unknown): value is NativeArray;
+```
+
+- `value`: `unknown` - Value to check.
+
+---
+
+### **Helpers**
 
 `deeplevel.helpers.offsetof()`: Returns the offset of a field inside a
 structure.
@@ -941,6 +1044,58 @@ function ZeroMemory(
 
 - `dest`: `Deno.PointerValue` - Pointer to the memory region to fill.
 - `size`: `number` - How much we want to fill with zeroes.
+
+---
+
+`deeplevel.helpers.equalsPointer()`: Checks whether two values point to the same
+memory address.
+
+```ts
+function equalsPointer(a: unknown, b: unknown): boolean;
+```
+
+- `a`: `unknown` - First value to compare.
+- `b`: `unknown` - Second value to compare.
+
+---
+
+`deeplevel.helpers.isPointer()`: Checks whether a value is a valid
+`Deno.PointerValue`.
+
+```ts
+function isPointer(a: unknown): boolean;
+```
+
+- `a`: `unknown` - Value to test.
+
+---
+
+`deeplevel.format()`: Formats a `ValueDeclarationType` into the same
+human-readable string representation used by `console.log()` and
+`Deno.inspect()`.
+
+```ts
+function format(
+    type: ValueDeclarationType,
+    opts?: {
+        name?: string;
+        ident?: number;
+        spaces?: number;
+        offset?: number;
+        colors?: boolean;
+    },
+): string;
+```
+
+- `type`: `ValueDeclarationType` - The type to format.
+- `opts`: Optional formatting configuration.
+  - `name`: `string` - Optional name to display in the formatted output.
+  - `ident`: `number` - Initial indentation level. Defaults to `0`.
+  - `spaces`: `number` - Number of spaces per indentation level. Defaults to
+    `4`.
+  - `offset`: `number` - Initial offset to display. Defaults to `0`.
+  - `colors`: `boolean` - Whether ANSI colors should be included in the output.
+    Defaults to `false`.
 
 ---
 
