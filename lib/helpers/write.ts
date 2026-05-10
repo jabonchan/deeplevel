@@ -1,9 +1,11 @@
 import type { TypedArray, ValueDeclarationType } from "../types/unions.ts";
 
-import { NativeArray, Struct, Union } from "../classes.ts";
+import { Struct, Union } from "../classes.ts";
+import { isArrayField } from "./checkers.ts";
 import { Endianness } from "../types/enums.ts";
 import { Platform } from "../constants.ts";
 import { address } from "./memory.ts";
+import { sizeof } from "./sizeof.ts";
 
 export function write(
     type: ValueDeclarationType,
@@ -15,10 +17,24 @@ export function write(
     const isLittleEndian = endianness === Endianness.Little;
     const view = new DataView(buff);
 
-    if (
-        Struct.isStruct(type) || Union.isUnion(type) ||
-        NativeArray.isNativeArray(type)
-    ) {
+    if (isArrayField(type)) {
+        const array = Array.from(value as ArrayLike<unknown>);
+        const elementSize = sizeof(type.type);
+
+        for (let i = 0; i < type.length; i++) {
+            write(
+                type.type,
+                array[i],
+                buff,
+                offset + elementSize * i,
+                endianness,
+            );
+        }
+
+        return;
+    }
+
+    if (Struct.isStruct(type) || Union.isUnion(type)) {
         // @ts-ignore - Too lazy to fix this type problem
         type.pack(value, buff, offset);
         return;

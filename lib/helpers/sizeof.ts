@@ -1,4 +1,5 @@
 import type { ValueDeclarationType } from "../types/unions.ts";
+import { isArrayField } from "./checkers.ts";
 
 import * as constants from "../constants.ts";
 
@@ -39,7 +40,11 @@ export function sizeof(
             break;
         }
 
+        case "number":
+            return type;
+
         default:
+            if (isArrayField(type)) return type.length * sizeof(type.type);
             return type.byteLength;
     }
 }

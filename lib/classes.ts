@@ -1,7 +1,6 @@
 import type {
     StructTypeof,
     UnionTypeof,
-    UnpackedNativeArray,
     UnpackedStruct,
     UnpackedUnion,
 } from "./types/generics.ts";
@@ -12,119 +11,9 @@ import { Alignment, Endianness } from "./types/enums.ts";
 import { endianness } from "./helpers/endianness.ts";
 import { alignof } from "./helpers/alignof.ts";
 import { sizeof } from "./helpers/sizeof.ts";
-import { format } from "./format/main.ts";
+import { format } from "./helpers/format.ts";
 import { write } from "./helpers/write.ts";
 import { read } from "./helpers/read.ts";
-
-export class NativeArray<
-    const Declaration extends ValueDeclarationType = ValueDeclarationType,
-> {
-    readonly isLittleEndian: boolean;
-    readonly isBigEndian: boolean;
-    readonly endianness: Endianness;
-
-    readonly align: Alignment;
-    readonly type: Declaration;
-
-    readonly byteLength: number;
-    readonly alignment: number;
-    readonly padding: number;
-    readonly length: number;
-    readonly size: number;
-
-    constructor(
-        opts: {
-            length: number;
-            type: Declaration;
-
-            endianness?: Endianness;
-            align?: Alignment;
-            size?: number;
-        },
-    ) {
-        opts = { ...opts };
-
-        opts.endianness ??= Endianness.System;
-        opts.size = Math.max(opts.size ?? 1, 1);
-
-        this.isLittleEndian = endianness(opts.endianness);
-        this.isBigEndian = !this.isLittleEndian;
-        this.endianness = this.isLittleEndian
-            ? Endianness.Little
-            : Endianness.Big;
-
-        this.align = opts.align ?? Alignment.Natural;
-        this.size = sizeof(opts.type) * opts.length;
-        this.type = opts.type;
-
-        this.alignment = alignof(this.type, this.align);
-        this.byteLength = Math.max(this.size, opts.size);
-        this.padding = this.byteLength - this.size;
-        this.length = opts.length;
-    }
-
-    static isNativeArray(value: unknown): value is NativeArray {
-        return !!(value && typeof value === "object" &&
-            value instanceof NativeArray);
-    }
-
-    [Symbol.for("Deno.customInspect")](
-        _: () => void,
-        opts: Deno.InspectOptions,
-    ): string {
-        return format(this, { colors: opts.colors ? true : false });
-    }
-
-    toString(): string {
-        return format(this, { colors: false });
-    }
-
-    offsetof(index: number): number {
-        return sizeof(this.type) * index;
-    }
-
-    typeof(): Declaration {
-        return this.type;
-    }
-
-    alignof(): number {
-        return this.alignment;
-    }
-
-    pack(
-        array: UnpackedNativeArray<Declaration>,
-        buff: ArrayBuffer = new ArrayBuffer(this.byteLength),
-        offset = 0,
-    ): ArrayBuffer {
-        for (let i = 0; i < this.length; i++) {
-            const value = array[i];
-            const index = this.offsetof(i);
-
-            write(this.type, value, buff, index + offset, this.endianness);
-        }
-
-        return buff;
-    }
-
-    unpack(buff: ArrayBuffer, offset = 0): UnpackedNativeArray<Declaration> {
-        const array: UnpackedNativeArray<Declaration> = [];
-
-        for (let i = 0; i < this.length; i++) {
-            const index = this.offsetof(i);
-            const value = read(
-                this.type,
-                buff,
-                index + offset,
-                this.endianness,
-            );
-
-            // @ts-ignore - Yeah this works on runtime properly.
-            array.push(value);
-        }
-
-        return array;
-    }
-}
 
 export class Struct<
     const Declaration extends readonly {
@@ -200,8 +89,7 @@ export class Struct<
     }
 
     static isStruct(value: unknown): value is Struct {
-        return !!(value && typeof value === "object" &&
-            value instanceof Struct);
+        return value instanceof Struct;
     }
 
     [Symbol.for("Deno.customInspect")](
@@ -407,7 +295,7 @@ export class Union<
     }
 
     static isUnion(value: unknown): value is Union {
-        return !!(value && typeof value === "object" && value instanceof Union);
+        return value instanceof Union;
     }
 
     [Symbol.for("Deno.customInspect")](

@@ -1,5 +1,5 @@
 import type { Indexable, RegularObject } from "./types.ts";
-import * as deeplevel from "../../mod.ts"
+import { equalsPointer, isPointer } from "./equals-pointer.ts";
 
 function isObject(value: unknown): value is Indexable {
     return typeof value === "object" && value !== null;
@@ -71,8 +71,8 @@ function objectEqualsInternal(
             throw new Error(errorMessage);
         }
 
-        if (deeplevel.helpers.isPointer(value) || deeplevel.helpers.isPointer(otherValue)) {
-            if (!deeplevel.helpers.equalsPointer(value, otherValue)) {
+        if (isPointer(value) || isPointer(otherValue)) {
+            if (!equalsPointer(value, otherValue)) {
                 throw new Error(
                     errorMessage + " (Pointers addresses don't match)",
                 );

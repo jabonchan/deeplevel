@@ -1,4 +1,4 @@
-import type { NativeArray, Struct, Union } from "../classes.ts";
+import type { Struct, Union } from "../classes.ts";
 
 export type TypedArray =
     | Uint8Array
@@ -20,4 +20,7 @@ export type ValueDeclarationType =
     | PrimitiveDeclarationType
     | Union
     | Struct
-    | NativeArray;
+    | {
+        readonly length: number;
+        readonly type: ValueDeclarationType;
+    };
