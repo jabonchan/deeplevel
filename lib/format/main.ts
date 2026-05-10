@@ -12,18 +12,18 @@ export function format(
     } = {},
 ): string {
     const newOpts = {
-        name: "unnamed",
         ident: 0,
         spaces: 4,
         offset: 0,
         colors: false,
         ...opts,
+        name: opts.name ?? null,
     };
 
-    const formatted = internalFormat(type, newOpts);
-    
+    const formatted = internalFormat(type, newOpts).trim();
+
     // deno-lint-ignore no-control-regex
     if (!opts.colors) return formatted.replace(/\x1b\[\d*m/g, "");
-    
+
     return formatted;
 }
