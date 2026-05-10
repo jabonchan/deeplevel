@@ -34,7 +34,7 @@ Deno.test("values: union roundtrip (strict)", () => {
     test.objectEqualsOptionalProperties(value, out);
 });
 
-Deno.test("Values: arrays", () => {
+Deno.test("Values: nested arrays", () => {
     const definitionA = new deeplevel.NativeArray({
         length: 3,
         type: t["double"], // if we use float we may lose precision and cause the check to fail
@@ -74,7 +74,7 @@ Deno.test("Values: arrays", () => {
     test.objectEquals(valueB, unpackedB);
 });
 
-Deno.test("Values: nested arrays", () => {
+Deno.test("Values: arrays inside struct", () => {
     const definition = new deeplevel.Struct({
         fields: [
             { name: "isVector", type: t["bool"] },
