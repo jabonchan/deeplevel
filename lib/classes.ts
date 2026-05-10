@@ -1,12 +1,13 @@
+import type { ValueDeclarationType } from "./types/unions.ts";
 import type {
+    StructFields,
     StructTypeof,
+    UnionFields,
     UnionTypeof,
     UnpackedNativeArray,
     UnpackedStruct,
     UnpackedUnion,
 } from "./types/generics.ts";
-import type { StructFields, UnionFields } from "./types/generics.ts";
-import type { ValueDeclarationType } from "./types/unions.ts";
 
 import { Alignment, Endianness } from "./types/enums.ts";
 import { endianness } from "./helpers/endianness.ts";

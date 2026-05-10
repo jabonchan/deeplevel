@@ -47,6 +47,19 @@ export type UnpackedValue<Type extends ValueDeclarationType> = Type extends
         ? Deno.PointerValue | ArrayBufferLike | TypedArray | bigint | number
     : never;
 
+export type StructSortedFields<
+    Declaration extends readonly {
+        name: string;
+        type: ValueDeclarationType;
+    }[] = readonly [],
+> = {
+    [K in keyof Declaration]: {
+        offset: number;
+        name: Declaration[K]["name"];
+        type: Declaration[K]["type"];
+    };
+};
+
 export type StructFields<
     Declaration extends readonly {
         name: string;
