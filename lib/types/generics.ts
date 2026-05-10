@@ -1,5 +1,5 @@
 import type { TypedArray, ValueDeclarationType } from "./unions.ts";
-import type { Struct, Union } from "../classes.ts";
+import type { NativeArray, Struct, Union } from "../classes.ts";
 
 type StructTypeofLookup<
     Declaration extends readonly {
@@ -37,10 +37,8 @@ export type UnpackedValue<Type extends ValueDeclarationType> = Type extends
     Struct<infer StructDeclaration> ? UnpackedStruct<StructDeclaration>
     : Type extends Union<infer UnionDeclaration>
         ? UnpackedUnion<UnionDeclaration>
-    : Type extends {
-        readonly length: number;
-        readonly type: infer ElementType extends ValueDeclarationType;
-    } ? UnpackedValue<ElementType>[]
+    : Type extends NativeArray<infer NativeArrayDeclaration>
+        ? UnpackedNativeArray<NativeArrayDeclaration>
     : Type extends "u8" | "i8" | "u16" | "i16" | "u32" | "i32" | "f32" | "f64"
         ? number
     : Type extends "u64" | "i64" | "isize" | "usize" ? bigint
@@ -86,7 +84,12 @@ export type UnpackedStruct<
     [K in Declaration[number] as K["name"]]: UnpackedValue<K["type"]>;
 };
 
-export type ExtractDeclaration<Value extends Struct | Union> = Value extends
-    Struct<infer Declaration> ? Declaration
-    : Value extends Union<infer Declaration> ? Declaration
-    : never;
+export type UnpackedNativeArray<
+    Declaration extends ValueDeclarationType = ValueDeclarationType,
+> = UnpackedValue<Declaration>[];
+
+export type ExtractDeclaration<Value extends Struct | Union | NativeArray> =
+    Value extends Struct<infer Declaration> ? Declaration
+        : Value extends Union<infer Declaration> ? Declaration
+        : Value extends NativeArray<infer Declaration> ? Declaration
+        : never;

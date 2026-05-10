@@ -1,10 +1,8 @@
 import type { ValueDeclarationType } from "../types/unions.ts";
 
-import { Struct, Union } from "../classes.ts";
-import { isArrayField } from "./checkers.ts";
+import { NativeArray, Struct, Union } from "../classes.ts";
 import { Endianness } from "../types/enums.ts";
 import { Platform } from "../constants.ts";
-import { sizeof } from "./sizeof.ts";
 import { create } from "./mod.ts";
 
 export function read(
@@ -16,25 +14,10 @@ export function read(
     const isLittleEndian = endianness === Endianness.Little;
     const view = new DataView(buff);
 
-    if (isArrayField(type)) {
-        const array = [];
-        const elementSize = sizeof(type.type);
-
-        for (let i = 0; i < type.length; i++) {
-            array.push(
-                read(
-                    type.type,
-                    buff,
-                    offset + elementSize * i,
-                    endianness,
-                ),
-            );
-        }
-
-        return array;
-    }
-
-    if (type instanceof Struct || type instanceof Union) {
+    if (
+        Struct.isStruct(type) || Union.isUnion(type) ||
+        NativeArray.isNativeArray(type)
+    ) {
         return (type as { unpack(buff: ArrayBuffer, offset: number): unknown })
             .unpack(buff, offset);
     }
