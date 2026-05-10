@@ -21,9 +21,10 @@ const nativeChar = isWindows ? "i8" : "u8";
 const testBuffer: ArrayBuffer = new ArrayBuffer(4);
 new DataView(testBuffer).setUint32(0, 0x00_00_00_01, true);
 
-export const SystemEndianness: enums.Endianness = new Uint8Array(testBuffer)[0] === 0x01
-    ? enums.Endianness.Little
-    : enums.Endianness.Big;
+export const SystemEndianness: enums.Endianness =
+    new Uint8Array(testBuffer)[0] === 0x01
+        ? enums.Endianness.Little
+        : enums.Endianness.Big;
 
 export const Platform = {
     os: Deno.build.os,

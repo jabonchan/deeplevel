@@ -52,7 +52,7 @@ Deno.test("ABI: union layout", () => {
     const U = new deeplevel.Union({
         a: t["signed char"],
         b: t["double"],
-        c: h.createArray(t["int"], 3),
+        c: new deeplevel.NativeArray({ type: t["int"], length: 3 }),
     });
 
     test.assert(h.alignof(U) === 8, "U alignment");
@@ -67,7 +67,7 @@ Deno.test("ABI: array of structs", () => {
         ],
     });
 
-    const Arr = h.createArray(S, 3);
+    const Arr = new deeplevel.NativeArray({ type: S, length: 3 });
 
     test.assert(h.sizeof(S) === 8, "S size");
     test.assert(h.alignof(S) === 4, "S alignment");
@@ -194,7 +194,7 @@ Deno.test("ABI: deep nesting (union -> struct -> union)", () => {
 
     const U2 = new deeplevel.Union({
         a: S,
-        b: h.createArray(t["int"], 3), // 12
+        b: new deeplevel.NativeArray({ type: t["int"], length: 3 }), // 12
     });
     // max size = 16, align = 8 -> size = 16
 
@@ -250,7 +250,7 @@ Deno.test("ABI: struct with array of unions", () => {
     });
     // size = 8, align = 8
 
-    const Arr = h.createArray(U, 3);
+    const Arr = new deeplevel.NativeArray({ type: U, length: 3 });
     // size = 24
 
     const S = new deeplevel.Struct({
