@@ -1,4 +1,4 @@
-export function equalsPointer(a: unknown, b: unknown) {
+export function equalsPointer(a: unknown, b: unknown): boolean {
     if (!a || !b) return false;
 
     try {
@@ -12,7 +12,7 @@ export function equalsPointer(a: unknown, b: unknown) {
     }
 }
 
-export function isPointer(a: unknown) {
+export function isPointer(a: unknown): boolean {
     if (!a) return false;
 
     try {
@@ -20,6 +20,6 @@ export function isPointer(a: unknown) {
         Deno.UnsafePointer.value(a);
         return true;
     } catch {
-        false;
+        return false;
     }
 }
